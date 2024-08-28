@@ -1,0 +1,54 @@
+#include "MeAuriga.h"
+
+// Crear objetos para los sensores ultrasónicos
+MeUltrasonicSensor ultrasonic_1(PORT_6); // Conectado al puerto 6
+MeUltrasonicSensor ultrasonic_2(PORT_7); // Conectado al puerto 7
+
+float L = 10.0;       // Distancia entre los sensores en cm (ajústalo según tu configuración)
+float alpha = 15.0;   // Ángulo de inclinación en grados (ajústalo según tu configuración)
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Medir las distancias con los sensores ultrasónicos
+  float d1 = ultrasonic_1.distanceCm();
+  float d2 = ultrasonic_2.distanceCm();
+
+  // Convertir alpha a radianes para cálculos
+  float alphaRad = alpha * (PI / 180.0);
+
+  if (d1 > 0 && d2 > 0) {
+    // Ambos sensores detectan el oponente
+    float d_real = (d1 + d2) / (2 * cos(alphaRad));
+    float theta_sensor = atan((d2 - d1) / L);
+    float theta = theta_sensor + alphaRad;
+    float thetaDegrees = theta * (180.0 / PI);
+
+    Serial.print("Oponente detectado en frente. Distancia: ");
+    Serial.print(d_real);
+    Serial.print(" cm");
+    Serial.print("\tÁngulo: ");
+    Serial.print(thetaDegrees);
+    Serial.println(" grados");
+  
+  } else if (d1 > 0 && d2 <= 0) {
+    // Solo el sensor 1 detecta el oponente
+    Serial.print("Oponente detectado a la izquierda. Distancia: ");
+    Serial.print(d1);
+    Serial.println(" cm");
+
+  } else if (d2 > 0 && d1 <= 0) {
+    // Solo el sensor 2 detecta el oponente
+    Serial.print("Oponente detectado a la derecha. Distancia: ");
+    Serial.print(d2);
+    Serial.println(" cm");
+
+  } else {
+    // Ninguno de los sensores detecta al oponente
+    Serial.println("No se detecta el oponente.");
+  }
+
+  delay(500); // Retardo para la próxima lectura
+}
