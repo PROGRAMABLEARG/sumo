@@ -1,54 +1,78 @@
-#include "MeAuriga.h"
+// Definición de pines
+const int PWMA = 11;
+const int AIN1_A = 48;
+const int AIN2_A = 49;
 
-// Crear objetos para los sensores ultrasónicos
-MeUltrasonicSensor ultrasonic_1(PORT_6); // Conectado al puerto 6
-MeUltrasonicSensor ultrasonic_2(PORT_7); // Conectado al puerto 7
+const int PWMB = 10;
+const int AIN1_B = 47;
+const int AIN2_B = 46;
 
-float L = 10.0;       // Distancia entre los sensores en cm (ajústalo según tu configuración)
-float alpha = 15.0;   // Ángulo de inclinación en grados (ajústalo según tu configuración)
-
+// Inicialización de los motores
 void setup() {
-  Serial.begin(9600);
+    pinMode(PWMA, OUTPUT);
+    pinMode(AIN1_A, OUTPUT);
+    pinMode(AIN2_A, OUTPUT);
+    pinMode(PWMB, OUTPUT);
+    pinMode(AIN1_B, OUTPUT);
+    pinMode(AIN2_B, OUTPUT);
+    
+    // Hacer avanzar durante 3 segundos
+    controlarMotores("adelante", 200);
+    delay(3000);  // Esperar 3 segundos
+    detenerMotores();  // Detener los motores
 }
 
 void loop() {
-  // Medir las distancias con los sensores ultrasónicos
-  float d1 = ultrasonic_1.distanceCm();
-  float d2 = ultrasonic_2.distanceCm();
+    // El loop puede estar vacío si solo necesitas que avance una vez
+}
 
-  // Convertir alpha a radianes para cálculos
-  float alphaRad = alpha * (PI / 180.0);
+// Función para controlar los motores
+void controlarMotores(String direccion, int velocidad) {
+    velocidad = constrain(velocidad, 0, 255);
 
-  if (d1 > 0 && d2 > 0) {
-    // Ambos sensores detectan el oponente
-    float d_real = (d1 + d2) / (2 * cos(alphaRad));
-    float theta_sensor = atan((d2 - d1) / L);
-    float theta = theta_sensor + alphaRad;
-    float thetaDegrees = theta * (180.0 / PI);
+    if (direccion == "adelante") {
+        digitalWrite(AIN1_A, HIGH);
+        digitalWrite(AIN2_A, LOW);
+        analogWrite(PWMA, velocidad);
+        
+        digitalWrite(AIN1_B, HIGH);
+        digitalWrite(AIN2_B, LOW);
+        analogWrite(PWMB, velocidad);
+    }
+    else if (direccion == "atras") {
+        digitalWrite(AIN1_A, LOW);
+        digitalWrite(AIN2_A, HIGH);
+        analogWrite(PWMA, velocidad);
+        
+        digitalWrite(AIN1_B, LOW);
+        digitalWrite(AIN2_B, HIGH);
+        analogWrite(PWMB, velocidad);
+    }
+    else if (direccion == "derecha") {
+        digitalWrite(AIN1_A, HIGH);
+        digitalWrite(AIN2_A, LOW);
+        analogWrite(PWMA, velocidad);
+        
+        digitalWrite(AIN1_B, LOW);
+        digitalWrite(AIN2_B, HIGH);
+        analogWrite(PWMB, velocidad);
+    }
+    else if (direccion == "izquierda") {
+        digitalWrite(AIN1_A, LOW);
+        digitalWrite(AIN2_A, HIGH);
+        analogWrite(PWMA, velocidad);
+        
+        digitalWrite(AIN1_B, HIGH);
+        digitalWrite(AIN2_B, LOW);
+        analogWrite(PWMB, velocidad);
+    }
+    else {
+        detenerMotores();  // Si la dirección no es válida, detener motores
+    }
+}
 
-    Serial.print("Oponente detectado en frente. Distancia: ");
-    Serial.print(d_real);
-    Serial.print(" cm");
-    Serial.print("\tÁngulo: ");
-    Serial.print(thetaDegrees);
-    Serial.println(" grados");
-  
-  } else if (d1 > 0 && d2 <= 0) {
-    // Solo el sensor 1 detecta el oponente
-    Serial.print("Oponente detectado a la izquierda. Distancia: ");
-    Serial.print(d1);
-    Serial.println(" cm");
-
-  } else if (d2 > 0 && d1 <= 0) {
-    // Solo el sensor 2 detecta el oponente
-    Serial.print("Oponente detectado a la derecha. Distancia: ");
-    Serial.print(d2);
-    Serial.println(" cm");
-
-  } else {
-    // Ninguno de los sensores detecta al oponente
-    Serial.println("No se detecta el oponente.");
-  }
-
-  delay(500); // Retardo para la próxima lectura
+// Función para detener los motores
+void detenerMotores() {
+    analogWrite(PWMA, 0);
+    analogWrite(PWMB, 0);
 }
